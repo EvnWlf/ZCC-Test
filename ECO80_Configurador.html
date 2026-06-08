@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurador ECO 80 — Danfoss</title>
+<style>
+  :root {
+    --red: #CC1B1B;
+    --red-light: #FAECEC;
+    --red-border: #E87070;
+    --gray-0: #F7F7F6;
+    --gray-1: #EBEBEA;
+    --gray-2: #D3D1C7;
+    --gray-3: #888780;
+    --gray-dark: #2C2C2A;
+    --text: #1A1A19;
+    --text-muted: #5F5E5A;
+    --text-hint: #888780;
+    --border: #D3D1C7;
+    --success-bg: #EAF3DE;
+    --success-text: #27500A;
+    --success-border: #639922;
+    --warning-bg: #FAEEDA;
+    --warning-text: #633806;
+    --warning-border: #BA7517;
+    --info-bg: #E6F1FB;
+    --info-text: #0C447C;
+    --info-border: #378ADD;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F2F1EE;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .layout {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  /* HEADER */
+  .header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.25rem;
+  }
+  .logo-box {
+    width: 44px; height: 44px;
+    background: var(--red);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-box svg { width: 28px; height: 28px; fill: white; }
+  .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .header p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* STEP CARDS */
+  .steps { display: flex; flex-direction: column; gap: 1rem; }
+
+  .step-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .step-card.active { border-color: var(--red-border); }
+  .step-card.locked { opacity: 0.45; pointer-events: none; }
+  .step-card.done { border-color: var(--success-border); }
+
+  .step-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--gray-1);
+    cursor: pointer;
+    user-select: none;
+  }
+  .step-card.locked .step-header { cursor: default; }
+
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    background: var(--gray-1); color: var(--text-muted);
+    flex-shrink: 0;
+    transition: background 0.2s, color 0.2s;
+  }
+  .step-card.active .step-num { background: var(--red); color: white; }
+  .step-card.done .step-num { background: var(--success-bg); color: var(--success-text); }
+
+  .step-title { font-size: 14px; font-weight: 600; flex: 1; }
+  .step-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .step-badge {
+    font-size: 11px; padding: 3px 8px;
+    border-radius: 20px; font-weight: 500;
+  }
+  .badge-pending { background: var(--gray-1); color: var(--text-hint); }
+  .badge-done { background: var(--success-bg); color: var(--success-text); }
+  .badge-active { background: var(--red-light); color: var(--red); }
+  .badge-locked { background: var(--gray-1); color: var(--text-hint); }
+
+  .step-body { padding: 1.25rem; display: none; }
+  .step-card.active .step-body, .step-card.done .step-body { display: block; }
+
+  /* FIELDS */
+  .field { margin-bottom: 1rem; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .option-grid.single { grid-template-columns: 1fr; }
+  .option-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  .opt-btn {
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: white;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .opt-btn:hover { border-color: var(--gray-3); background: var(--gray-0); }
+  .opt-btn.selected { border-color: var(--red); background: var(--red-light); }
+  .opt-btn .opt-label { font-size: 13px; font-weight: 500; color: var(--text); display: block; }
+  .opt-btn .opt-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; display: block; }
+  .opt-btn.selected .opt-label { color: var(--red); }
+
+  .check-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 6px;
+  }
+  .check-row:hover { border-color: var(--gray-3); }
+  .check-row.checked { border-color: var(--red); background: var(--red-light); }
+  .check-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--red); cursor: pointer; }
+  .check-row .check-label { font-size: 13px; font-weight: 500; flex: 1; }
+  .check-row .check-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+  .qty-row { display: flex; align-items: center; gap: 12px; }
+  .qty-btn {
+    width: 32px; height: 32px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: white;
+    font-size: 18px; font-weight: 400;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .qty-btn:hover { border-color: var(--red); color: var(--red); }
+  .qty-val { font-size: 20px; font-weight: 600; width: 32px; text-align: center; }
+
+  .alert {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px; line-height: 1.5;
+    margin-top: 10px;
+  }
+  .alert-warn { background: var(--warning-bg); color: var(--warning-text); border-left: 3px solid var(--warning-border); }
+  .alert-info { background: var(--info-bg); color: var(--info-text); border-left: 3px solid var(--info-border); }
+  .alert-ok { background: var(--success-bg); color: var(--success-text); border-left: 3px solid var(--success-border); }
+
+  .done-summary {
+    font-size: 13px; color: var(--text-muted);
+    padding: 8px 12px;
+    background: var(--gray-0);
+    border-radius: var(--radius-sm);
+    line-height: 1.6;
+  }
+  .done-summary strong { color: var(--text); font-weight: 600; }
+
+  .next-btn {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 10px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .next-btn:hover { background: #B01515; }
+  .next-btn:disabled { background: var(--gray-2); color: var(--text-hint); cursor: not-allowed; }
+
+  .edit-btn {
+    font-size: 11px;
+    color: var(--red);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+  }
+
+  /* SIDEBAR */
+  .sidebar { position: sticky; top: 1rem; }
+
+  .summary-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .summary-head {
+    padding: 1rem 1.25rem;
+    background: var(--gray-dark);
+    color: white;
+  }
+  .summary-head h2 { font-size: 14px; font-weight: 600; }
+  .summary-head p { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+  .summary-body { padding: 1rem; }
+
+  .part-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-1);
+  }
+  .part-row:last-child { border-bottom: none; }
+  .part-tag { font-size: 10px; font-weight: 700; color: var(--text-hint); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
+  .part-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  .part-code {
+    display: inline-block;
+    margin-top: 4px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    background: var(--gray-0);
+    border: 1px solid var(--gray-1);
+    padding: 2px 7px;
+    border-radius: 4px;
+    color: var(--text-muted);
+  }
+  .part-qty { font-size: 11px; color: var(--text-hint); margin-left: 6px; }
+
+  .placeholder-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-1);
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0.45;
+  }
+  .placeholder-bar {
+    height: 10px; border-radius: 5px; background: var(--gray-2);
+  }
+
+  .export-btn {
+    width: 100%; margin-top: 1rem;
+    padding: 11px;
+    background: var(--gray-dark);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .export-btn:hover { background: #444441; }
+  .export-btn:disabled { background: var(--gray-2); color: var(--text-hint); cursor: not-allowed; }
+
+  .reset-btn {
+    width: 100%; margin-top: 8px;
+    padding: 8px;
+    background: none;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .progress-bar-wrap {
+    height: 3px;
+    background: var(--gray-1);
+    border-radius: 2px;
+    margin-top: 8px;
+  }
+  .progress-bar-fill {
+    height: 100%; border-radius: 2px;
+    background: var(--red);
+    transition: width 0.4s ease;
+  }
+
+  /* VALID BADGE */
+  .valid-badge {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500;
+    background: var(--success-bg);
+    color: var(--success-text);
+    border: 1px solid var(--success-border);
+    margin-bottom: 1rem;
+  }
+  .valid-badge svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  @media (max-width: 780px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    .header { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-box">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </div>
+    <div>
+      <h1>Configurador ECO 80</h1>
+      <p>Válvula direccional de control — Danfoss · Armado paso a paso</p>
+    </div>
+  </div>
+
+  <!-- STEPS COLUMN -->
+  <div class="steps">
+
+    <!-- STEP 1: Tipo de actuación -->
+    <div class="step-card active" id="step-1">
+      <div class="step-header" onclick="toggleStep(1)">
+        <div class="step-num">1</div>
+        <div style="flex:1">
+          <div class="step-title">Tipo de actuación</div>
+          <div class="step-subtitle">Define el conjunto de módulos disponibles</div>
+        </div>
+        <span class="step-badge badge-active" id="badge-1">Seleccionar</span>
+      </div>
+      <div class="step-body">
+        <div class="field">
+          <label>¿Cómo se controlarán las secciones?</label>
+          <div class="option-grid">
+            <button class="opt-btn" onclick="sel(this,'actType','mech')" data-val="mech">
+              <span class="opt-label">Mecánico</span>
+              <span class="opt-sub">Palanca manual (EVOS/EVME)</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'actType','elec')" data-val="elec">
+              <span class="opt-label">Eléctrico proporcional</span>
+              <span class="opt-sub">Señal de corriente (EVHC)</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'actType','hyd')" data-val="hyd">
+              <span class="opt-label">Hidráulico</span>
+              <span class="opt-sub">Piloto de aceite (EVH)</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'actType','pneu')" data-val="pneu">
+              <span class="opt-label">Neumático</span>
+              <span class="opt-sub">Presión de aire (EVPN)</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'actType','onoff')" data-val="onoff">
+              <span class="opt-label">Eléctrico on/off</span>
+              <span class="opt-sub">Señal digital (EVHCO)</span>
+            </button>
+          </div>
+          <div class="alert alert-info" style="margin-top:10px">
+            Los modos eléctrico, hidráulico y neumático requieren un EVP con PPRV integrado.
+          </div>
+        </div>
+        <button class="next-btn" id="btn-next-1" onclick="confirmStep(1)" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Puerto y bomba -->
+    <div class="step-card locked" id="step-2">
+      <div class="step-header" onclick="toggleStep(2)">
+        <div class="step-num">2</div>
+        <div style="flex:1">
+          <div class="step-title">Puerto y tipo de bomba</div>
+          <div class="step-subtitle">Módulo de entrada EVP</div>
+        </div>
+        <span class="step-badge badge-locked" id="badge-2">Bloqueado</span>
+      </div>
+      <div class="step-body">
+        <div class="field">
+          <label>Tipo de rosca de puertos P/T</label>
+          <div class="option-grid">
+            <button class="opt-btn" onclick="sel(this,'portType','metric')" data-val="metric">
+              <span class="opt-label">Métrico</span>
+              <span class="opt-sub">G 1/2 · G 1/4</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'portType','sae')" data-val="sae">
+              <span class="opt-label">SAE</span>
+              <span class="opt-sub">7/8-14 UNF · 9/16-18 UNF</span>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Tipo de bomba hidráulica</label>
+          <div class="option-grid">
+            <button class="opt-btn" onclick="sel(this,'pumpType','oc')" data-val="oc">
+              <span class="opt-label">Centro abierto</span>
+              <span class="opt-sub">Bomba de desplazamiento fijo</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'pumpType','cc')" data-val="cc">
+              <span class="opt-label">Centro cerrado</span>
+              <span class="opt-sub">Bomba de desplazamiento variable (LS)</span>
+            </button>
+          </div>
+        </div>
+        <div id="evpx-field" style="display:none">
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Válvula de descarga EVPX</label>
+          <label class="check-row" id="evpx-row" onclick="toggleCheck('hasEVPX')">
+            <input type="checkbox" id="chk-evpx" onclick="event.stopPropagation()">
+            <div>
+              <div class="check-label">Incluir EVPX (descarga eléctrica LS)</div>
+              <div class="check-sub" style="font-size:11px;color:var(--text-muted)">Solo disponible en EVP de centro abierto con PPRV</div>
+            </div>
+          </label>
+        </div>
+        <div id="evp-result" class="alert alert-info" style="display:none;margin-top:12px"></div>
+        <button class="next-btn" id="btn-next-2" onclick="confirmStep(2)" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Secciones de trabajo EVB -->
+    <div class="step-card locked" id="step-3">
+      <div class="step-header" onclick="toggleStep(3)">
+        <div class="step-num">3</div>
+        <div style="flex:1">
+          <div class="step-title">Secciones de trabajo EVB</div>
+          <div class="step-subtitle">Cuerpo del módulo y cantidad</div>
+        </div>
+        <span class="step-badge badge-locked" id="badge-3">Bloqueado</span>
+      </div>
+      <div class="step-body">
+        <div class="field">
+          <label>Número de secciones (1 – 12)</label>
+          <div class="qty-row">
+            <button class="qty-btn" onclick="changeQty(-1)">−</button>
+            <span class="qty-val" id="qty-val">1</span>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+            <span style="font-size:13px;color:var(--text-muted)">sección(es) de trabajo</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Tipo de cuerpo</label>
+          <div class="option-grid">
+            <button class="opt-btn" onclick="sel(this,'bodyType','low')" data-val="low">
+              <span class="opt-label">Cuerpo bajo (Low)</span>
+              <span class="opt-sub">Sin cavidades PVLP/PVLA</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'bodyType','medium')" data-val="medium">
+              <span class="opt-label">Cuerpo mediano (Medium)</span>
+              <span class="opt-sub">Con cavidades para válvulas PVLP/PVLA</span>
+            </button>
+          </div>
+        </div>
+        <div id="pvlp-field" style="display:none">
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Válvulas de puertos A/B (opcionales)</label>
+          <label class="check-row" onclick="toggleCheck('hasPVLP')">
+            <input type="checkbox" id="chk-pvlp" onclick="event.stopPropagation()">
+            <div>
+              <div class="check-label">PVLP — Shock / anticavitación</div>
+              <div class="check-sub" style="font-size:11px;color:var(--text-muted)">Alivio de pico de presión y succión anticavitación</div>
+            </div>
+          </label>
+          <label class="check-row" onclick="toggleCheck('hasPVLA')">
+            <input type="checkbox" id="chk-pvla" onclick="event.stopPropagation()">
+            <div>
+              <div class="check-label">PVLA — Válvula de succión</div>
+              <div class="check-sub" style="font-size:11px;color:var(--text-muted)">Solo succión desde tanque al puerto de trabajo</div>
+            </div>
+          </label>
+        </div>
+        <div id="evb-result" class="alert alert-info" style="display:none;margin-top:12px"></div>
+        <button class="next-btn" id="btn-next-3" onclick="confirmStep(3)" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Carrete EVBS -->
+    <div class="step-card locked" id="step-4">
+      <div class="step-header" onclick="toggleStep(4)">
+        <div class="step-num">4</div>
+        <div style="flex:1">
+          <div class="step-title">Carrete de control EVBS</div>
+          <div class="step-subtitle">Tipo de carrete y caudal nominal</div>
+        </div>
+        <span class="step-badge badge-locked" id="badge-4">Bloqueado</span>
+      </div>
+      <div class="step-body">
+        <div class="field">
+          <label>Configuración de vías</label>
+          <div class="option-grid">
+            <button class="opt-btn" onclick="sel(this,'spoolWay','4w_closed')" data-val="4w_closed">
+              <span class="opt-label">4 vías / 3 posiciones</span>
+              <span class="opt-sub">Centro cerrado</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'spoolWay','4w_open')" data-val="4w_open">
+              <span class="opt-label">4 vías / 3 posiciones</span>
+              <span class="opt-sub">Centro abierto (throttled)</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'spoolWay','3w')" data-val="3w">
+              <span class="opt-label">3 vías / 3 posiciones</span>
+              <span class="opt-sub">Centro cerrado (simple efecto)</span>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Caudal nominal</label>
+          <div class="option-grid three" id="flow-grid">
+            <button class="opt-btn" onclick="sel(this,'spoolFlow','8')" data-val="8">
+              <span class="opt-label">8 l/min</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'spoolFlow','25')" data-val="25">
+              <span class="opt-label">25 l/min</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'spoolFlow','40')" data-val="40">
+              <span class="opt-label">40 l/min</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'spoolFlow','60')" data-val="60">
+              <span class="opt-label">60 l/min</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'spoolFlow','80')" data-val="80">
+              <span class="opt-label">80 l/min</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'spoolFlow','100')" data-val="100">
+              <span class="opt-label">100 l/min</span>
+            </button>
+          </div>
+          <div id="spool-warn" style="display:none" class="alert alert-warn">⚠ 100 l/min no se recomienda para control proporcional en modo eléctrico (curva no lineal).</div>
+        </div>
+        <div id="mech-spool-extra" style="display:none">
+          <div class="field">
+            <label>Variante de carrete mecánico</label>
+            <div class="option-grid">
+              <button class="opt-btn" onclick="sel(this,'spoolVar','std')" data-val="std">
+                <span class="opt-label">Estándar</span>
+                <span class="opt-sub">Extensión femenina</span>
+              </button>
+              <button class="opt-btn" onclick="sel(this,'spoolVar','thru')" data-val="thru">
+                <span class="opt-label">Pasante (through)</span>
+                <span class="opt-sub">Actuación desde ambos lados</span>
+              </button>
+              <button class="opt-btn" onclick="sel(this,'spoolVar','det')" data-val="det">
+                <span class="opt-label">Con detent</span>
+                <span class="opt-sub">Posición enclavada</span>
+              </button>
+              <button class="opt-btn" onclick="sel(this,'spoolVar','micro')" data-val="micro">
+                <span class="opt-label">Con microswitch</span>
+                <span class="opt-sub">Señal de posición eléctrica</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="evbs-result" class="alert alert-info" style="display:none;margin-top:8px"></div>
+        <button class="next-btn" id="btn-next-4" onclick="confirmStep(4)" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: Módulo de actuación -->
+    <div class="step-card locked" id="step-5">
+      <div class="step-header" onclick="toggleStep(5)">
+        <div class="step-num">5</div>
+        <div style="flex:1">
+          <div class="step-title">Módulo de actuación</div>
+          <div class="step-subtitle">Actuador específico según tipo de control</div>
+        </div>
+        <span class="step-badge badge-locked" id="badge-5">Bloqueado</span>
+      </div>
+      <div class="step-body" id="act-body">
+        <!-- Relleno dinámico por JS -->
+        <button class="next-btn" id="btn-next-5" onclick="confirmStep(5)" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 6: Tapa final EVO -->
+    <div class="step-card locked" id="step-6">
+      <div class="step-header" onclick="toggleStep(6)">
+        <div class="step-num">6</div>
+        <div style="flex:1">
+          <div class="step-title">Tapa final EVO</div>
+          <div class="step-subtitle">Cierre del grupo y función LS</div>
+        </div>
+        <span class="step-badge badge-locked" id="badge-6">Bloqueado</span>
+      </div>
+      <div class="step-body">
+        <div class="field">
+          <label>Variante de tapa EVO</label>
+          <div class="option-grid" id="evo-grid">
+            <button class="opt-btn" onclick="sel(this,'evoType','std')" data-val="std">
+              <span class="opt-label">EVO estándar</span>
+              <span class="opt-sub">Cierre simple, LS a tanque</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'evoType','lx_metric')" data-val="lx_metric">
+              <span class="opt-label">EVO con conexión LX</span>
+              <span class="opt-sub">LS remoto — rosca métrica G1/8</span>
+            </button>
+            <button class="opt-btn" onclick="sel(this,'evoType','lx_sae')" data-val="lx_sae">
+              <span class="opt-label">EVO con conexión LX</span>
+              <span class="opt-sub">LS remoto — rosca SAE 7/16-20</span>
+            </button>
+            <button class="opt-btn" id="evo-pneu-btn" onclick="sel(this,'evoType','pneu')" data-val="pneu" style="display:none">
+              <span class="opt-label">EVO con puerto neumático</span>
+              <span class="opt-sub">Requerido para actuación EVPN</span>
+            </button>
+          </div>
+          <div id="evo-warn" style="display:none" class="alert alert-warn">⚠ La actuación neumática (EVPN) requiere la tapa EVO con puerto neumático.</div>
+        </div>
+        <div id="evo-result" class="alert alert-info" style="display:none;margin-top:8px"></div>
+        <button class="next-btn" id="btn-next-6" onclick="confirmStep(6)" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 7: Kit EVT -->
+    <div class="step-card locked" id="step-7">
+      <div class="step-header" onclick="toggleStep(7)">
+        <div class="step-num">7</div>
+        <div style="flex:1">
+          <div class="step-title">Kit de ensamblaje EVT</div>
+          <div class="step-subtitle">Tirantes, tuercas y arandelas</div>
+        </div>
+        <span class="step-badge badge-locked" id="badge-7">Bloqueado</span>
+      </div>
+      <div class="step-body">
+        <div id="evt-result" class="alert alert-ok"></div>
+        <button class="next-btn" id="btn-next-7" onclick="confirmStep(7)">Finalizar configuración ✓</button>
+      </div>
+    </div>
+
+  </div><!-- end steps -->
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="summary-card">
+      <div class="summary-head">
+        <h2>Lista de partes</h2>
+        <p id="progress-label">Paso 1 de 7</p>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:14%"></div></div>
+      </div>
+      <div class="summary-body" id="summary-body">
+        <div id="valid-badge" style="display:none" class="valid-badge">
+          <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#27500A" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5 5-5" stroke="#27500A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Configuración válida y completa
+        </div>
+        <!-- placeholders -->
+        <div id="ph-1" class="placeholder-row"><div class="placeholder-bar" style="width:30%;margin-right:8px"></div><div class="placeholder-bar" style="width:55%"></div></div>
+        <div id="ph-2" class="placeholder-row"><div class="placeholder-bar" style="width:25%;margin-right:8px"></div><div class="placeholder-bar" style="width:60%"></div></div>
+        <div id="ph-3" class="placeholder-row"><div class="placeholder-bar" style="width:35%;margin-right:8px"></div><div class="placeholder-bar" style="width:50%"></div></div>
+        <div id="ph-4" class="placeholder-row"><div class="placeholder-bar" style="width:20%;margin-right:8px"></div><div class="placeholder-bar" style="width:65%"></div></div>
+        <!-- real rows -->
+        <div id="sr-evp" style="display:none" class="part-row">
+          <div class="part-tag">EVP — Módulo de entrada</div>
+          <div class="part-name" id="sr-evp-name">—</div>
+          <span class="part-code" id="sr-evp-code">—</span>
+        </div>
+        <div id="sr-evb" style="display:none" class="part-row">
+          <div class="part-tag">EVB — Sección de trabajo</div>
+          <div class="part-name" id="sr-evb-name">—</div>
+          <span class="part-code" id="sr-evb-code">—</span><span class="part-qty" id="sr-evb-qty"></span>
+        </div>
+        <div id="sr-evbs" style="display:none" class="part-row">
+          <div class="part-tag">EVBS — Carrete de control</div>
+          <div class="part-name" id="sr-evbs-name">—</div>
+          <span class="part-code" id="sr-evbs-code">—</span><span class="part-qty" id="sr-evbs-qty"></span>
+        </div>
+        <div id="sr-act" style="display:none" class="part-row">
+          <div class="part-tag" id="sr-act-tag">Actuador</div>
+          <div class="part-name" id="sr-act-name">—</div>
+          <span class="part-code" id="sr-act-code">—</span><span class="part-qty" id="sr-act-qty"></span>
+        </div>
+        <div id="sr-act2" style="display:none" class="part-row">
+          <div class="part-tag" id="sr-act2-tag">Cubierta lado A</div>
+          <div class="part-name" id="sr-act2-name">—</div>
+          <span class="part-code" id="sr-act2-code">—</span>
+        </div>
+        <div id="sr-evo" style="display:none" class="part-row">
+          <div class="part-tag">EVO — Tapa final</div>
+          <div class="part-name" id="sr-evo-name">—</div>
+          <span class="part-code" id="sr-evo-code">—</span>
+        </div>
+        <div id="sr-evt" style="display:none" class="part-row">
+          <div class="part-tag">EVT — Kit de ensamblaje</div>
+          <div class="part-name" id="sr-evt-name">—</div>
+          <span class="part-code" id="sr-evt-code">—</span>
+        </div>
+        <div id="sr-pvlp" style="display:none" class="part-row">
+          <div class="part-tag">PVLP / PVLA — Accesorios</div>
+          <div class="part-name" id="sr-pvlp-name">—</div>
+        </div>
+      </div>
+      <div style="padding: 0 1rem 1rem">
+        <button class="export-btn" id="export-btn" onclick="exportConfig()" disabled>Copiar lista de partes</button>
+        <button class="reset-btn" onclick="resetAll()">Reiniciar configuración</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end layout -->
+
+<script>
+const cfg = {
+  actType: null, portType: null, pumpType: null,
+  hasEVPX: false, bodyType: null, numSections: 1,
+  hasPVLP: false, hasPVLA: false,
+  spoolWay: null, spoolFlow: null, spoolVar: null,
+  actModel: null, actVolt: null,
+  evmLever: null, evoType: null,
+  currentStep: 1, completedSteps: []
+};
+
+const NEEDS_PPRV = ['elec','hyd','pneu','onoff'];
+
+// EVP part numbers
+const EVP_CODES = {
+  mech: {
+    oc: { metric:'11173005', sae:'11172981' },
+    cc: { metric:'11173006', sae:'11173002' }
+  },
+  pprv: {
+    oc: {
+      nox: { metric:'11172996', sae:'11173010' },
+      evpx: { metric:'11173023', sae:'11173000' }
+    },
+    cc: { metric:'11172997', sae:'11173011' }
+  }
+};
+
+// EVB part numbers (mechanical vs electrical)
+const EVB_CODES = {
+  mech: {
+    low:    { metric:'11168505', sae:'11168504' },
+    medium: { metric:'11168503', sae:'11168502' }
+  },
+  elec: {
+    low:    { metric:'11168506', sae:'11168507' },
+    medium: { metric:'11168509', sae:'11168508' }
+  }
+};
+
+// EVBS mechanical part numbers [way][variant][flow]
+const EVBS_MECH = {
+  '4w_closed': {
+    std:   { '8':'11169728','25':'11169733','40':'11169737','60':'11169741','80':'11169745','100':'11182571' },
+    thru:  { '8':'11170744','25':'11170747','40':'11170750','60':'11170753','80':'11170756','100':'11187072' },
+    det:   { '8':'11170627','25':'11170634','40':'11170638','60':'11170642','80':'11170646','100':'11182609' },
+    micro: { '8':'11170264','25':'11170268','40':'11170272','60':'11170276','80':'11170280','100':'11187073' }
+  },
+  '4w_open': {
+    std:   { '8':'11169725','25':'11169730','40':'11169735','60':'11169739','80':'11169743','100':'11182572' },
+    thru:  { '8':'11170743','25':'11170746','40':'11170749','60':'11170752','80':'11170755','100':'11187061' },
+    det:   { '8':'11170625','25':'11170632','40':'11170636','60':'11170640','80':'11170644','100':'11182610' },
+    micro: { '8':'11170262','25':'11170266','40':'11170270','60':'11170274','80':'11170278','100':'11187074' }
+  },
+  '3w': {
+    std:   { '8':'11169729','25':'11169734','40':'11169738','60':'11169742','80':'11169746','100':null },
+    thru:  { '8':'11170745','25':'11170748','40':'11170751','60':'11170754','80':'11170757','100':null },
+    det:   { '8':'11170631','25':'11170635','40':'11170639','60':'11170643','80':'11170647','100':null },
+    micro: { '8':'11170265','25':'11170269','40':'11170273','60':'11170277','80':'11170281','100':null }
+  }
+};
+
+// EVBS electrical part numbers [way][flow]
+const EVBS_ELEC = {
+  '4w_closed': { '8':'11170445','25':'11170449','40':'11170453','60':'11170457','80':'11170461','100':'11182178' },
+  '4w_open':   { '8':'11170443','25':'11170447','40':'11170451','60':'11170455','80':'11170459','100':'11182177' },
+  '3w':        { '8':'11170446','25':'11170450','40':'11170454','60':'11170458','80':'11170462','100':null }
+};
+const EVBS_ELEC_SOFT = {
+  '4w_closed': { '8':'11192205','25':'11192207','40':'11192209','60':'11192252','80':'11192257','100':'11192264' },
+  '4w_open':   { '8':'11192206','25':'11192208','40':'11192239','60':'11192262','80':'11192259','100':'11192265' },
+  '3w':        { '8':'11192236','25':'11192238','40':'11192241','60':'11192255','80':'11192263','100':null }
+};
+const EVBS_PNEU = {
+  '4w_closed': { '40':'11194018','80':'11194024' },
+  '4w_open':   { '40':'11194019','80':'11194025' },
+  '3w':        { '40':'11194020','80':'11194026' }
+};
+
+// Actuators
+const EVHC = { '12':'11162297','24':'11162298' };
+const EVHCO = { '12':'11186922','24':'11186911' };
+const EVH = { bsp:'11169486', sae:'11169487' };
+const EVPN_PNEU = '11198492';
+const EVPN_ELEC = { '12':'11193722','24':'11193723' };
+const EVM = { nolever_noadj:'11119157', lever:'11167001', adj:'11145204', lever_adj:'11167002' };
+const EVOS_THRU = '11172533';
+const EVOS_MECH = '047768';
+const EVOS_LEVER = '11175314';
+const EVME_COVER = '11169579';
+const EVME_THRU = '11169580';
+const EVC_COVER = '11171318';
+
+// EVO
+const EVO_CODES = {
+  std:      '11191585',
+  lx_metric:'11191583',
+  lx_sae:   '11191582',
+  pneu:     '11191584'
+};
+
+// EVT
+const EVT = ['','11173102','11173103','11173104','11173105','11173106','11173107','11173108','11173109','11173110','11173111','11173112','11173113'];
+
+function sel(btn, key, val) {
+  const parent = btn.closest('.option-grid, .step-body');
+  const grid = btn.parentElement;
+  grid.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  cfg[key] = val;
+  onFieldChange(key, val);
+}
+
+function toggleCheck(key) {
+  cfg[key] = !cfg[key];
+  const chk = document.getElementById('chk-' + key.replace('has','').toLowerCase());
+  if (chk) chk.checked = cfg[key];
+  const row = chk ? chk.closest('.check-row') : null;
+  if (row) row.classList.toggle('checked', cfg[key]);
+  onFieldChange(key, cfg[key]);
+}
+
+function changeQty(d) {
+  cfg.numSections = Math.max(1, Math.min(12, cfg.numSections + d));
+  document.getElementById('qty-val').textContent = cfg.numSections;
+  onFieldChange('numSections', cfg.numSections);
+}
+
+function isMech() { return cfg.actType === 'mech'; }
+
+function onFieldChange(key) {
+  // Step 1
+  if (key === 'actType') {
+    document.getElementById('btn-next-1').disabled = false;
+  }
+
+  // Step 2
+  if (['portType','pumpType','hasEVPX'].includes(key)) {
+    const needsPPRV = NEEDS_PPRV.includes(cfg.actType);
+    // show evpx only for open center with pprv
+    document.getElementById('evpx-field').style.display = (needsPPRV && cfg.pumpType === 'oc') ? 'block' : 'none';
+    if (cfg.portType && cfg.pumpType) {
+      const evpCode = getEVPCode();
+      const descPump = cfg.pumpType === 'oc' ? 'Centro abierto' : 'Centro cerrado';
+      const descPort = cfg.portType === 'metric' ? 'Métrico G 1/2' : 'SAE 7/8-14 UNF';
+      const descPPRV = needsPPRV ? ' + PPRV' : '';
+      const descEVPX = cfg.hasEVPX ? ' + EVPX' : '';
+      document.getElementById('evp-result').style.display = 'block';
+      document.getElementById('evp-result').innerHTML = `<strong>EVP seleccionado:</strong> ${descPump}${descPPRV}${descEVPX} · ${descPort}<br><span style="font-family:monospace">${evpCode}</span>`;
+      document.getElementById('btn-next-2').disabled = !evpCode;
+    }
+  }
+
+  // Step 3
+  if (['bodyType','numSections','hasPVLP','hasPVLA'].includes(key)) {
+    const hasMed = cfg.bodyType === 'medium';
+    document.getElementById('pvlp-field').style.display = hasMed ? 'block' : 'none';
+    if (!hasMed) { cfg.hasPVLP = false; cfg.hasPVLA = false; document.getElementById('chk-pvlp').checked = false; document.getElementById('chk-pvla').checked = false; }
+    if (cfg.bodyType) {
+      const evbFam = isMech() ? 'mech' : 'elec';
+      const evbCode = EVB_CODES[evbFam][cfg.bodyType][cfg.portType];
+      document.getElementById('evb-result').style.display = 'block';
+      document.getElementById('evb-result').innerHTML = `<strong>EVB ${cfg.bodyType === 'low' ? 'Low' : 'Medium'}:</strong> ${cfg.numSections}x <span style="font-family:monospace">${evbCode}</span>`;
+      document.getElementById('btn-next-3').disabled = false;
+    }
+  }
+
+  // Step 4
+  if (['spoolWay','spoolFlow','spoolVar'].includes(key)) {
+    // PNEU flow restricted to 40 / 80
+    const isPneu = cfg.actType === 'pneu';
+    document.querySelectorAll('#flow-grid .opt-btn').forEach(b => {
+      if (isPneu) { b.style.display = ['40','80'].includes(b.dataset.val) ? '' : 'none'; }
+      else { b.style.display = ''; }
+    });
+    // 3-way: no 100 l/min for pneu
+    const no100 = isPneu || cfg.spoolWay === '3w';
+    document.querySelectorAll('#flow-grid .opt-btn[data-val="100"]').forEach(b => b.style.display = no100 ? 'none' : '');
+    // mech extra
+    document.getElementById('mech-spool-extra').style.display = isMech() ? 'block' : 'none';
+    // spool warn
+    const showWarn = !isMech() && cfg.spoolFlow === '100';
+    document.getElementById('spool-warn').style.display = showWarn ? 'block' : 'none';
+    // resolve code
+    const code = getEVBSCode();
+    if (cfg.spoolWay && cfg.spoolFlow) {
+      const mechDone = !isMech() || cfg.spoolVar;
+      document.getElementById('btn-next-4').disabled = !(code && (isMech() ? cfg.spoolVar : true));
+      if (code) {
+        const qty = cfg.numSections;
+        document.getElementById('evbs-result').style.display = 'block';
+        document.getElementById('evbs-result').innerHTML = `<strong>EVBS:</strong> ${qty}x <span style="font-family:monospace">${code}</span>`;
+      }
+    }
+  }
+
+  // Step 5 dynamic options
+  if (key === 'actModel' || key === 'actVolt' || key === 'evmLever') {
+    checkStep5Done();
+  }
+
+  // Step 6: evo
+  if (key === 'evoType') {
+    const isPneu = cfg.actType === 'pneu';
+    const needsPneu = isPneu;
+    if (needsPneu && cfg.evoType !== 'pneu') {
+      document.getElementById('evo-warn').style.display = 'block';
+      document.getElementById('btn-next-6').disabled = true;
+    } else {
+      document.getElementById('evo-warn').style.display = 'none';
+      const code = EVO_CODES[cfg.evoType];
+      document.getElementById('evo-result').style.display = 'block';
+      document.getElementById('evo-result').innerHTML = `<strong>EVO:</strong> <span style="font-family:monospace">${code}</span>`;
+      document.getElementById('btn-next-6').disabled = false;
+    }
+    updateSummary();
+  }
+
+  updateSummary();
+}
+
+function getEVPCode() {
+  const needsPPRV = NEEDS_PPRV.includes(cfg.actType);
+  const p = cfg.portType === 'metric' ? 'metric' : 'sae';
+  if (!needsPPRV) return EVP_CODES.mech[cfg.pumpType][p];
+  if (cfg.pumpType === 'cc') return EVP_CODES.pprv.cc[p];
+  return cfg.hasEVPX ? EVP_CODES.pprv.oc.evpx[p] : EVP_CODES.pprv.oc.nox[p];
+}
+
+function getEVBSCode() {
+  if (!cfg.spoolWay || !cfg.spoolFlow) return null;
+  if (cfg.actType === 'pneu') {
+    return EVBS_PNEU[cfg.spoolWay]?.[cfg.spoolFlow] || null;
+  }
+  if (isMech()) {
+    if (!cfg.spoolVar) return null;
+    return EVBS_MECH[cfg.spoolWay]?.[cfg.spoolVar]?.[cfg.spoolFlow] || null;
+  }
+  if (cfg.actType === 'onoff') return EVBS_ELEC_SOFT[cfg.spoolWay]?.[cfg.spoolFlow] || null;
+  return EVBS_ELEC[cfg.spoolWay]?.[cfg.spoolFlow] || null;
+}
+
+function buildStep5() {
+  const body = document.getElementById('act-body');
+  const btn = document.getElementById('btn-next-5');
+  cfg.actModel = null; cfg.actVolt = null; cfg.evmLever = null;
+  let html = '';
+
+  if (isMech()) {
+    // EVOS + EVME
+    html += `<div class="field"><label>Actuador lado operador (EVOS)</label>
+      <div class="option-grid">
+        <button class="opt-btn" onclick="sel(this,'actModel','evos_thru')" data-val="evos_thru">
+          <span class="opt-label">EVOS pasante</span><span class="opt-sub">Acción directa sin palanca · <span style="font-family:monospace">${EVOS_THRU}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'actModel','evos_lever')" data-val="evos_lever">
+          <span class="opt-label">EVOS con palanca</span><span class="opt-sub">Palanca estándar · <span style="font-family:monospace">${EVOS_LEVER}</span></span>
+        </button>
+      </div></div>`;
+    html += `<div class="field"><label>Cubierta lado opuesto (EVME)</label>
+      <div class="option-grid">
+        <button class="opt-btn" onclick="sel(this,'evmLever','cover')" data-val="cover">
+          <span class="opt-label">EVME centrado por resorte</span><span class="opt-sub">Cubre y centra · <span style="font-family:monospace">${EVME_COVER}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'evmLever','thru')" data-val="thru">
+          <span class="opt-label">EVME pasante</span><span class="opt-sub">Acción desde ambos lados · <span style="font-family:monospace">${EVME_THRU}</span></span>
+        </button>
+      </div></div>`;
+
+  } else if (cfg.actType === 'elec' || cfg.actType === 'onoff') {
+    const label = cfg.actType === 'elec' ? 'EVHC — Actuador proporcional' : 'EVHCO — Actuador on/off';
+    const codes = cfg.actType === 'elec' ? EVHC : EVHCO;
+    html += `<div class="field"><label>${label}</label>
+      <div class="option-grid">
+        <button class="opt-btn" onclick="sel(this,'actVolt','12')" data-val="12">
+          <span class="opt-label">12 V</span><span class="opt-sub"><span style="font-family:monospace">${codes['12']}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'actVolt','24')" data-val="24">
+          <span class="opt-label">24 V</span><span class="opt-sub"><span style="font-family:monospace">${codes['24']}</span></span>
+        </button>
+      </div></div>`;
+    html += `<div class="field"><label>EVM — Actuador manual lado B</label>
+      <div class="option-grid">
+        <button class="opt-btn" onclick="sel(this,'actModel','evm_nolv')" data-val="evm_nolv">
+          <span class="opt-label">EVM sin palanca</span><span class="opt-sub"><span style="font-family:monospace">${EVM.nolever_noadj}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'actModel','evm_lv')" data-val="evm_lv">
+          <span class="opt-label">EVM con palanca</span><span class="opt-sub"><span style="font-family:monospace">${EVM.lever}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'actModel','evm_adj')" data-val="evm_adj">
+          <span class="opt-label">EVM con tornillos ajuste</span><span class="opt-sub"><span style="font-family:monospace">${EVM.adj}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'actModel','evm_lv_adj')" data-val="evm_lv_adj">
+          <span class="opt-label">EVM palanca + ajuste</span><span class="opt-sub"><span style="font-family:monospace">${EVM.lever_adj}</span></span>
+        </button>
+      </div></div>
+      <div class="alert alert-info">La cubierta lado A (EVC · <span style="font-family:monospace">${EVC_COVER}</span>) se incluye automáticamente.</div>`;
+
+  } else if (cfg.actType === 'hyd') {
+    html += `<div class="field"><label>EVH — Actuador hidráulico (lado A)</label>
+      <div class="option-grid">
+        <button class="opt-btn" onclick="sel(this,'actModel','evh_bsp')" data-val="evh_bsp">
+          <span class="opt-label">BSP 1/4"</span><span class="opt-sub"><span style="font-family:monospace">${EVH.bsp}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'actModel','evh_sae')" data-val="evh_sae">
+          <span class="opt-label">SAE 9/16"</span><span class="opt-sub"><span style="font-family:monospace">${EVH.sae}</span></span>
+        </button>
+      </div></div>`;
+    html += `<div class="field"><label>EVM — Actuador manual lado B</label>
+      <div class="option-grid">
+        <button class="opt-btn" onclick="sel(this,'evmLever','evm_nolv')" data-val="evm_nolv">
+          <span class="opt-label">EVM sin palanca</span><span class="opt-sub"><span style="font-family:monospace">${EVM.nolever_noadj}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'evmLever','evm_lv')" data-val="evm_lv">
+          <span class="opt-label">EVM con palanca</span><span class="opt-sub"><span style="font-family:monospace">${EVM.lever}</span></span>
+        </button>
+      </div></div>`;
+
+  } else if (cfg.actType === 'pneu') {
+    html += `<div class="field"><label>EVPN — Actuador neumático (lado A)</label>
+      <div class="option-grid">
+        <button class="opt-btn" onclick="sel(this,'actModel','evpn_pneu')" data-val="evpn_pneu">
+          <span class="opt-label">Neumático puro</span><span class="opt-sub">1/8 BSP · <span style="font-family:monospace">${EVPN_PNEU}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'actModel','evpn_12')" data-val="evpn_12">
+          <span class="opt-label">Electro-neumático 12 V</span><span class="opt-sub"><span style="font-family:monospace">${EVPN_ELEC['12']}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'actModel','evpn_24')" data-val="evpn_24">
+          <span class="opt-label">Electro-neumático 24 V</span><span class="opt-sub"><span style="font-family:monospace">${EVPN_ELEC['24']}</span></span>
+        </button>
+      </div></div>`;
+    html += `<div class="field"><label>EVM — Actuador manual lado B</label>
+      <div class="option-grid">
+        <button class="opt-btn" onclick="sel(this,'evmLever','evm_nolv')" data-val="evm_nolv">
+          <span class="opt-label">EVM sin palanca</span><span class="opt-sub"><span style="font-family:monospace">${EVM.nolever_noadj}</span></span>
+        </button>
+        <button class="opt-btn" onclick="sel(this,'evmLever','evm_lv')" data-val="evm_lv">
+          <span class="opt-label">EVM con palanca</span><span class="opt-sub"><span style="font-family:monospace">${EVM.lever}</span></span>
+        </button>
+      </div></div>`;
+    html += `<div class="alert alert-warn">⚠ La tapa EVO debe tener puerto neumático (siguiente paso).</div>`;
+  }
+
+  html += `<button class="next-btn" id="btn-next-5" onclick="confirmStep(5)" disabled>Continuar →</button>`;
+  body.innerHTML = html;
+  checkStep5Done();
+}
+
+function checkStep5Done() {
+  const btn = document.getElementById('btn-next-5');
+  if (!btn) return;
+  let done = false;
+  if (isMech()) done = !!(cfg.actModel && cfg.evmLever);
+  else if (cfg.actType === 'elec' || cfg.actType === 'onoff') done = !!(cfg.actModel && cfg.actVolt);
+  else if (cfg.actType === 'hyd') done = !!(cfg.actModel && cfg.evmLever);
+  else if (cfg.actType === 'pneu') done = !!(cfg.actModel && cfg.evmLever);
+  btn.disabled = !done;
+  if (done) updateSummary();
+}
+
+function toggleStep(n) {
+  if (cfg.completedSteps.includes(n)) {
+    const card = document.getElementById('step-'+n);
+    const body = card.querySelector('.step-body');
+    body.style.display = body.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+function confirmStep(n) {
+  const card = document.getElementById('step-'+n);
+  card.classList.remove('active');
+  card.classList.add('done');
+  document.getElementById('badge-'+n).textContent = 'Listo';
+  document.getElementById('badge-'+n).className = 'step-badge badge-done';
+  if (!cfg.completedSteps.includes(n)) cfg.completedSteps.push(n);
+
+  if (n < 7) {
+    const next = document.getElementById('step-'+(n+1));
+    next.classList.remove('locked');
+    next.classList.add('active');
+    document.getElementById('badge-'+(n+1)).textContent = 'Seleccionar';
+    document.getElementById('badge-'+(n+1)).className = 'step-badge badge-active';
+    cfg.currentStep = n+1;
+    if (n+1 === 5) buildStep5();
+    if (n+1 === 6) {
+      document.getElementById('evo-pneu-btn').style.display = cfg.actType === 'pneu' ? '' : 'none';
+    }
+    if (n+1 === 7) {
+      const code = EVT[cfg.numSections];
+      document.getElementById('evt-result').innerHTML = `<strong>EVT para ${cfg.numSections} sección(es):</strong><br><span style="font-family:monospace">${code}</span><br><span style="font-size:11px">Incluye 4 tirantes, 8 arandelas, 8 tuercas y O-ring.</span>`;
+    }
+    next.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  } else {
+    // finalize
+    document.getElementById('valid-badge').style.display = 'flex';
+    document.getElementById('export-btn').disabled = false;
+  }
+
+  updateProgress(n);
+  updateSummary();
+}
+
+function updateProgress(step) {
+  const pct = Math.round((step / 7) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `Paso ${Math.min(step+1,7)} de 7`;
+}
+
+function updateSummary() {
+  // EVP
+  if (cfg.portType && cfg.pumpType) {
+    const code = getEVPCode();
+    const needsPPRV = NEEDS_PPRV.includes(cfg.actType);
+    const desc = `${cfg.pumpType === 'oc' ? 'Centro abierto':'Centro cerrado'}${needsPPRV?' + PPRV':''}${cfg.hasEVPX?' + EVPX':''} · ${cfg.portType === 'metric' ? 'Métrico':'SAE'}`;
+    document.getElementById('sr-evp').style.display = '';
+    document.getElementById('sr-evp-name').textContent = desc;
+    document.getElementById('sr-evp-code').textContent = code;
+    document.getElementById('ph-1').style.display = 'none';
+  }
+  // EVB
+  if (cfg.bodyType && cfg.portType) {
+    const fam = isMech() ? 'mech' : 'elec';
+    const code = EVB_CODES[fam][cfg.bodyType][cfg.portType];
+    document.getElementById('sr-evb').style.display = '';
+    document.getElementById('sr-evb-name').textContent = `${cfg.bodyType === 'low' ? 'Cuerpo bajo (Low)':'Cuerpo medio (Medium)'}`;
+    document.getElementById('sr-evb-code').textContent = code;
+    document.getElementById('sr-evb-qty').textContent = `× ${cfg.numSections}`;
+    document.getElementById('ph-2').style.display = 'none';
+  }
+  // EVBS
+  const evbsCode = getEVBSCode();
+  if (evbsCode) {
+    document.getElementById('sr-evbs').style.display = '';
+    const wayLabels = {'4w_closed':'4V/3P centro cerrado','4w_open':'4V/3P centro abierto','3w':'3V/3P'};
+    document.getElementById('sr-evbs-name').textContent = `${wayLabels[cfg.spoolWay] || ''} · ${cfg.spoolFlow} l/min`;
+    document.getElementById('sr-evbs-code').textContent = evbsCode;
+    document.getElementById('sr-evbs-qty').textContent = `× ${cfg.numSections}`;
+    document.getElementById('ph-3').style.display = 'none';
+  }
+  // Actuador
+  if (cfg.actModel) {
+    document.getElementById('sr-act').style.display = '';
+    document.getElementById('ph-4').style.display = 'none';
+    if (isMech()) {
+      const codes = { evos_thru: EVOS_THRU, evos_lever: EVOS_LEVER };
+      const names = { evos_thru: 'EVOS pasante', evos_lever: 'EVOS con palanca' };
+      document.getElementById('sr-act-tag').textContent = 'EVOS — Actuador mecánico';
+      document.getElementById('sr-act-name').textContent = names[cfg.actModel] || cfg.actModel;
+      document.getElementById('sr-act-code').textContent = codes[cfg.actModel] || '—';
+      document.getElementById('sr-act-qty').textContent = `× ${cfg.numSections}`;
+    } else if (cfg.actType === 'elec' || cfg.actType === 'onoff') {
+      const isElec = cfg.actType === 'elec';
+      const codes = isElec ? EVHC : EVHCO;
+      document.getElementById('sr-act-tag').textContent = isElec ? 'EVHC — Actuador eléctrico' : 'EVHCO — Actuador on/off';
+      document.getElementById('sr-act-name').textContent = `${cfg.actVolt || '?'} V`;
+      document.getElementById('sr-act-code').textContent = cfg.actVolt ? codes[cfg.actVolt] : '—';
+      document.getElementById('sr-act-qty').textContent = `× ${cfg.numSections}`;
+      // EVM + EVC
+      const evmNames = { evm_nolv:'EVM sin palanca', evm_lv:'EVM con palanca', evm_adj:'EVM con ajuste', evm_lv_adj:'EVM palanca+ajuste' };
+      const evmCodes = { evm_nolv: EVM.nolever_noadj, evm_lv: EVM.lever, evm_adj: EVM.adj, evm_lv_adj: EVM.lever_adj };
+      document.getElementById('sr-act2').style.display = '';
+      document.getElementById('sr-act2-tag').textContent = 'EVM — Manual + EVC cubierta';
+      document.getElementById('sr-act2-name').textContent = `${evmNames[cfg.actModel] || ''} + EVC`;
+      document.getElementById('sr-act2-code').textContent = cfg.actModel ? evmCodes[cfg.actModel] + ' + ' + EVC_COVER : '—';
+    } else if (cfg.actType === 'hyd') {
+      document.getElementById('sr-act-tag').textContent = 'EVH — Actuador hidráulico';
+      document.getElementById('sr-act-name').textContent = cfg.actModel === 'evh_bsp' ? 'BSP 1/4"' : 'SAE 9/16"';
+      document.getElementById('sr-act-code').textContent = cfg.actModel === 'evh_bsp' ? EVH.bsp : EVH.sae;
+      document.getElementById('sr-act-qty').textContent = `× ${cfg.numSections}`;
+    } else if (cfg.actType === 'pneu') {
+      document.getElementById('sr-act-tag').textContent = 'EVPN — Actuador neumático';
+      const pneuNames = { evpn_pneu:'Neumático puro', evpn_12:'Electro-neumático 12V', evpn_24:'Electro-neumático 24V' };
+      const pneuCodes = { evpn_pneu: EVPN_PNEU, evpn_12: EVPN_ELEC['12'], evpn_24: EVPN_ELEC['24'] };
+      document.getElementById('sr-act-name').textContent = pneuNames[cfg.actModel] || '';
+      document.getElementById('sr-act-code').textContent = pneuCodes[cfg.actModel] || '—';
+      document.getElementById('sr-act-qty').textContent = `× ${cfg.numSections}`;
+    }
+  }
+  if (isMech() && cfg.evmLever) {
+    document.getElementById('sr-act2').style.display = '';
+    const n2 = { cover:'EVME centrado por resorte', thru:'EVME pasante' };
+    const c2 = { cover: EVME_COVER, thru: EVME_THRU };
+    document.getElementById('sr-act2-tag').textContent = 'EVME — Cubierta lado opuesto';
+    document.getElementById('sr-act2-name').textContent = n2[cfg.evmLever] || cfg.evmLever;
+    document.getElementById('sr-act2-code').textContent = c2[cfg.evmLever] || '—';
+  }
+  // EVO
+  if (cfg.evoType) {
+    document.getElementById('sr-evo').style.display = '';
+    const evoNames = { std:'Estándar', lx_metric:'Con conexión LX (métrico)', lx_sae:'Con conexión LX (SAE)', pneu:'Con puerto neumático' };
+    document.getElementById('sr-evo-name').textContent = evoNames[cfg.evoType] || '';
+    document.getElementById('sr-evo-code').textContent = EVO_CODES[cfg.evoType];
+  }
+  // EVT
+  if (cfg.completedSteps.includes(7)) {
+    document.getElementById('sr-evt').style.display = '';
+    document.getElementById('sr-evt-name').textContent = `${cfg.numSections} sección(es)`;
+    document.getElementById('sr-evt-code').textContent = EVT[cfg.numSections];
+  }
+  // PVLP/PVLA
+  if (cfg.hasPVLP || cfg.hasPVLA) {
+    document.getElementById('sr-pvlp').style.display = '';
+    const acc = [];
+    if (cfg.hasPVLP) acc.push('PVLP shock/anticavitación (seleccionar presión: 157B2xxx)');
+    if (cfg.hasPVLA) acc.push('PVLA succión · 157B2001');
+    document.getElementById('sr-pvlp-name').textContent = acc.join(' | ');
+  } else {
+    document.getElementById('sr-pvlp').style.display = 'none';
+  }
+}
+
+function exportConfig() {
+  const rows = [];
+  rows.push('CONFIGURACIÓN DANFOSS ECO 80');
+  rows.push('='.repeat(40));
+  document.querySelectorAll('.part-row').forEach(row => {
+    if (row.style.display === 'none') return;
+    const tag = row.querySelector('.part-tag')?.textContent || '';
+    const name = row.querySelector('.part-name')?.textContent || '';
+    const code = row.querySelector('.part-code')?.textContent || '';
+    const qty = row.querySelector('.part-qty')?.textContent || '';
+    rows.push(`${tag}: ${name} | ${code} ${qty}`);
+  });
+  navigator.clipboard.writeText(rows.join('\n')).then(() => {
+    const btn = document.getElementById('export-btn');
+    btn.textContent = '✓ Copiado al portapapeles';
+    setTimeout(() => btn.textContent = 'Copiar lista de partes', 2000);
+  });
+}
+
+function resetAll() {
+  location.reload();
+}
+
+// Init: show EVPX field logic on step 2 open
+document.getElementById('step-2').addEventListener('click', () => {
+  const needsPPRV = NEEDS_PPRV.includes(cfg.actType);
+  document.getElementById('evpx-field').style.display = (needsPPRV && cfg.pumpType === 'oc') ? 'block' : 'none';
+});
+</script>
+</body>
+</html>
