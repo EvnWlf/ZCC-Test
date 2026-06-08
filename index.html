@@ -36,13 +36,13 @@
         </div>
 
         <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
-            </div>
+        </div>
     </main>
 
     <script>
+
         const GITHUB_USER = "EvnWlf"; 
         const REPO_NAME = "ZCC-Test";
-        // ==========================================
 
         const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents`;
         const PAGES_URL = `https://${GITHUB_USER}.github.io/${REPO_NAME}`;
@@ -60,7 +60,7 @@
                 
                 const items = await response.json();
                 
-                // Filtramos para mostrar únicamente carpetas (ignorando archivos sueltos como este index)
+                // Filtramos para mostrar únicamente carpetas
                 const folders = items.filter(item => item.type === 'dir' && !item.name.startsWith('.'));
 
                 if (folders.length === 0) {
@@ -69,9 +69,26 @@
                 }
 
                 for (const folder of folders) {
-                    // Intentamos buscar una previsualización (imagen o descripción corta)
                     const previewImageUrl = `${PAGES_URL}/${folder.path}/preview.png`; 
-                    const projectUrl = `${PAGES_URL}/${folder.path}/`;
+                    let projectUrl = `${PAGES_URL}/${folder.path}/`; // Ruta base por defecto
+
+                    // --- NUEVA LÓGICA: Buscar el archivo HTML dentro de la carpeta ---
+                    try {
+                        const folderResponse = await fetch(folder.url); // Petición a la API para ver el interior de la carpeta
+                        if (folderResponse.ok) {
+                            const folderItems = await folderResponse.json();
+                            // Buscamos cualquier archivo que termine con .html
+                            const htmlFile = folderItems.find(item => item.type === 'file' && item.name.endsWith('.html'));
+                            
+                            if (htmlFile) {
+                                // Si lo encuentra, construye la URL directa hacia ese archivo HTML
+                                projectUrl = `${PAGES_URL}/${folder.path}/${htmlFile.name}`;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`No se pudo escanear el interior de la carpeta: ${folder.name}`, e);
+                    }
+                    // -----------------------------------------------------------------
 
                     const card = document.createElement('div');
                     card.className = "group bg-slate-800/40 border border-slate-800 hover:border-slate-700/80 rounded-2xl overflow-hidden transition-all duration-300 flex flex-col hover:-translate-y-1 shadow-xl hover:shadow-indigo-500/5";
