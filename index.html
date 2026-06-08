@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador de Proyectos</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-600/10 text-indigo-400 rounded-xl border border-indigo-500/20">
+                    <i data-lucide="folder-git-2" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent" id="repo-title">
+                        Mis Proyectos
+                    </h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Repositorio de GitHub Pages</p>
+                </div>
+            </div>
+            <a id="github-link" href="#" target="_blank" class="flex items-center gap-2 text-sm bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg border border-slate-700 transition-all">
+                <i data-lucide="github" class="w-4 h-4"></i>
+                Ver Código Fuente
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-12">
+        <div id="loading" class="flex flex-col items-center justify-center py-20 gap-3">
+            <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-slate-400 text-sm">Explorando el repositorio...</p>
+        </div>
+
+        <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+            </div>
+    </main>
+
+    <script>
+        // ==========================================
+        // CONFIGURACIÓN: Reemplaza con tus datos
+        // ==========================================
+        const GITHUB_USER = "TU_USUARIO_DE_GITHUB"; 
+        const REPO_NAME = "NOMBRE_DE_TU_REPOSITORIO";
+        // ==========================================
+
+        const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents`;
+        const PAGES_URL = `https://${GITHUB_USER}.github.io/${REPO_NAME}`;
+
+        document.getElementById('repo-title').innerText = REPO_NAME.replace(/-/g, ' ');
+        document.getElementById('github-link').href = `https://github.com/${GITHUB_USER}/${REPO_NAME}`;
+
+        async function loadRepositoryContents() {
+            const grid = document.getElementById('projects-grid');
+            const loading = document.getElementById('loading');
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('No se pudo obtener el contenido');
+                
+                const items = await response.json();
+                
+                // Filtramos para mostrar únicamente carpetas (ignorando archivos sueltos como este index)
+                const folders = items.filter(item => item.type === 'dir' && !item.name.startsWith('.'));
+
+                if (folders.length === 0) {
+                    loading.innerHTML = `<p class="text-slate-400 text-sm">No se encontraron carpetas públicas en la raíz de este proyecto.</p>`;
+                    return;
+                }
+
+                for (const folder of folders) {
+                    // Intentamos buscar una previsualización (imagen o descripción corta)
+                    const previewImageUrl = `${PAGES_URL}/${folder.path}/preview.png`; 
+                    const projectUrl = `${PAGES_URL}/${folder.path}/`;
+
+                    const card = document.createElement('div');
+                    card.className = "group bg-slate-800/40 border border-slate-800 hover:border-slate-700/80 rounded-2xl overflow-hidden transition-all duration-300 flex flex-col hover:-translate-y-1 shadow-xl hover:shadow-indigo-500/5";
+
+                    card.innerHTML = `
+                        <div class="relative aspect-video bg-slate-900 overflow-hidden border-b border-slate-800/60 flex items-center justify-center">
+                            <img src="${previewImageUrl}" 
+                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"text-slate-600 flex flex-col items-center gap-2\"><i data-lucide=\"layout\" class=\"w-8 h-8 stroke-[1.5]\"></i><span class=\"text-xs font-mono text-slate-500\">Sin preview.png</span></div>'; lucide.createIcons();" 
+                                 alt="${folder.name}" 
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
+
+                        <div class="p-5 flex-1 flex flex-col justify-between gap-4">
+                            <div>
+                                <h2 class="font-semibold text-slate-200 group-hover:text-indigo-400 transition-colors capitalize text-lg flex items-center gap-2">
+                                    <i data-lucide="folder" class="w-4 h-4 text-slate-400 group-hover:text-indigo-400 transition-colors"></i>
+                                    ${folder.name.replace(/[-_]/g, ' ')}
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1.5 font-mono bg-slate-900/50 px-2 py-1 rounded inline-block">
+                                    /${folder.path}
+                                </p>
+                            </div>
+
+                            <a href="${projectUrl}" class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm py-2.5 px-4 rounded-xl transition-colors shadow-lg shadow-indigo-600/10">
+                                Explorar contenido
+                                <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"></i>
+                            </a>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                }
+
+                // Inicializar iconos de Lucide cargados dinámicamente
+                lucide.createIcons();
+                
+                loading.classList.add('hidden');
+                grid.classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                loading.innerHTML = `
+                    <div class="text-center text-red-400 max-w-sm">
+                        <i data-lucide="alert-circle" class="w-8 h-8 mx-auto mb-2 text-red-400/80"></i>
+                        <p class="text-sm font-semibold">Error al conectar con la API de GitHub</p>
+                        <p class="text-xs text-slate-500 mt-1">Asegúrate de que el repositorio sea público y que configuraste correctamente el usuario y nombre del repo en el script.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadRepositoryContents);
+    </script>
+</body>
+</html>
